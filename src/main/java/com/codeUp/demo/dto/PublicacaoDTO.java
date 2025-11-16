@@ -1,16 +1,21 @@
 package com.codeUp.demo.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
 
 public class PublicacaoDTO {
     private Long id;
+
+    @NotBlank(message = "o conteúdo não pode estar vazio")
     private String conteudo;
     private LocalDateTime createdAt;
     private int curtidasCount;
+    @NotBlank(message = "o id do autor não pode estar vazio")
     private Long authorId;
     private String authorName;
 
-    public PublicacaoDTO(){}
+    public PublicacaoDTO(Long id, String conteudo, LocalDateTime createdAt, int curtidasCount, Long aLong, String nome){}
 
     public Long getId() {
         return id;

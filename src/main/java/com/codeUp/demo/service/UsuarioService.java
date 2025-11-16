@@ -1,5 +1,6 @@
 package com.codeUp.demo.service;
 
+import com.codeUp.demo.model.Publicacao;
 import com.codeUp.demo.model.Usuario;
 import com.codeUp.demo.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -33,5 +34,15 @@ public class UsuarioService {
 
     public List<Usuario> findAll(){
         return usuarioRepository.findAll();
+    }
+
+    public void salvarPublicacao(Usuario usuario, Publicacao publicacao){
+        if (!usuario.getPublicacoesSalvas().contains(publicacao)){
+            usuario.getPublicacoesSalvas().add(publicacao);
+        }
+    }
+
+    public void removerPublicacaoSalva(Usuario usuario, Publicacao publicacao) {
+        usuario.getPublicacoesSalvas().remove(publicacao);
     }
 }

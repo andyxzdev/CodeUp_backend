@@ -21,6 +21,22 @@ public class Usuario {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Publicacao> publicacoes = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "usuarios_publicacoes_salvas",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "publicacao_id")
+    )
+    private List<Publicacao> publicacoesSalvas = new ArrayList<>();
+
+    public List<Publicacao> getPublicacoesSalvas() {
+        return publicacoesSalvas;
+    }
+
+    public void setPublicacoesSalvas() {
+        this.publicacoesSalvas = publicacoesSalvas;
+    }
+
     public Usuario(){}
 
     public Usuario(String nome,String email, String senha){

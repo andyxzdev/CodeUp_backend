@@ -2,6 +2,8 @@ package com.codeUp.demo.service;
 
 import com.codeUp.demo.model.Publicacao;
 import com.codeUp.demo.repository.PublicacaoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,8 +21,8 @@ public class PublicacaoService {
         return publicacaoRepository.save(publicacao);
     }
 
-    public List<Publicacao> feed(){
-        return publicacaoRepository.findAllByOrderByCreatedAtDesc();
+    public Page<Publicacao> feed(Pageable pageable){
+        return publicacaoRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
     public Optional<Publicacao> findById(Long id){

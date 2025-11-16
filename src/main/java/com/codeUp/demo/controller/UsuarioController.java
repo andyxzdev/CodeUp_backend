@@ -1,5 +1,7 @@
 package com.codeUp.demo.controller;
 
+import com.codeUp.demo.RespostaPadrao;
+import com.codeUp.demo.dto.PublicacaoDTO;
 import com.codeUp.demo.dto.UsuarioDTO;
 import com.codeUp.demo.model.Usuario;
 import com.codeUp.demo.service.UsuarioService;
@@ -54,4 +56,30 @@ public class UsuarioController {
             return ResponseEntity.ok(new UsuarioDTO(salvo.getId(), salvo.getNome(), salvo.getEmail()));
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{id}/salvos")
+    public ResponseEntity<?> listarSalvos(@PathVariable Long id) {
+        var usuario = usuarioService.findById(id);
+
+        if (usuario.isEmpty())
+            return ResponseEntity.badRequest()
+                    .body(new RespostaPadrao<>(false, "Usuário inválido", null));
+
+        var lista = usuario.get().getPublicacoesSalvas()
+                .stream()
+                .map(publicacao -> new PublicacaoDTO(
+                        publicacao.getId(),
+                        publicacao.getConteudo(),
+                        publicacao.getCreatedAt(),
+                        publicacao.getCurtidasCount(),
+                        publicacao.getAuthor().getId(),
+                        publicacao.getAuthor().getNome()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(
+                new RespostaPadrao<>(true, "Publicações salvas carregadas", lista)
+        );
+    }
+
 }
