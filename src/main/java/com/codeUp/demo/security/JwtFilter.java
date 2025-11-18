@@ -5,17 +5,17 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component
+// ⚠️ SEM @Component - o SecurityConfig cuida da criação
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UsuarioService usuarioService;
 
+    // Construtor normal - o SecurityConfig vai chamar
     public JwtFilter(JwtUtil jwtUtil, UsuarioService usuarioService) {
         this.jwtUtil = jwtUtil;
         this.usuarioService = usuarioService;

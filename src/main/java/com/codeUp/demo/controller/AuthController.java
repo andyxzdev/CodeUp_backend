@@ -40,7 +40,7 @@ public class AuthController {
         return ResponseEntity.ok(
                 new RespostaPadrao<>(true, "Login bem-sucedido",
                         new Object() {
-                            public String token = token;
+                            public String token;
                             public UsuarioDTO usuario = userDTO;
                         })
         );

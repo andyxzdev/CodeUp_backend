@@ -58,6 +58,53 @@ public class PublicacaoController {
                 .body(new RespostaPadrao<>(true, "Publicação criada com sucesso", out));
     }
 
+    @PostMapping("/temp")
+    public ResponseEntity<?> criarPublicacaoTemp(@RequestBody PublicacaoDTO dto) {
+
+        try {
+            System.out.println("🎯 Endpoint /temp chamado!");
+            System.out.println("📦 DTO recebido: " + dto);
+            System.out.println("📝 Conteúdo: " + dto.getConteudo());
+            System.out.println("👤 AuthorId: " + dto.getAuthorId());
+
+            // Buscar QUALQUER usuário existente
+            var todosUsuarios = usuarioService.findAll();
+            System.out.println("🔍 Total de usuários encontrados: " + todosUsuarios.size());
+
+            if (todosUsuarios.isEmpty()) {
+                System.out.println("❌ Nenhum usuário encontrado no banco!");
+                return ResponseEntity.badRequest()
+                        .body(new RespostaPadrao<>(false, "Nenhum usuário cadastrado", null));
+            }
+
+            // Listar todos os usuários para debug
+            for (var user : todosUsuarios) {
+                System.out.println("   👤 Usuário: " + user.getId() + " - " + user.getNome());
+            }
+
+            // Usar o primeiro usuário disponível
+            var usuario = todosUsuarios.get(0);
+            System.out.println("✅ Usando usuário: " + usuario.getNome() + " (ID: " + usuario.getId() + ")");
+
+            Publicacao pub = new Publicacao(dto.getConteudo(), usuario);
+            pub.setCreatedAt(LocalDateTime.now());
+
+            Publicacao criada = publicacaoService.criar(pub);
+            PublicacaoDTO out = toDTO(criada);
+
+            System.out.println("📝 Publicação criada com ID: " + criada.getId());
+
+            return ResponseEntity.ok()
+                    .body(new RespostaPadrao<>(true, "Publicação criada com sucesso", out));
+
+        } catch (Exception e) {
+            System.out.println("💥 ERRO no endpoint /temp: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(new RespostaPadrao<>(false, "Erro interno: " + e.getMessage(), null));
+        }
+    }
+
     // FEED
     @GetMapping("/feed")
     public ResponseEntity<?> feed(
@@ -202,15 +249,33 @@ public class PublicacaoController {
     }
 
     // Conversão Entity → DTO
+    // No PublicacaoController.java
     private PublicacaoDTO toDTO(Publicacao publicacao) {
+        System.out.println("🔍 DEBUG toDTO - Iniciando conversão:");
+        System.out.println("   Publicacao ID: " + publicacao.getId());
+        System.out.println("   Conteúdo: " + publicacao.getConteudo());
+        System.out.println("   CreatedAt: " + publicacao.getCreatedAt());
+        System.out.println("   CurtidasCount: " + publicacao.getCurtidasCount());
+
+        // Verifique se o autor está carregado
+        if (publicacao.getAuthor() != null) {
+            System.out.println("   Autor: " + publicacao.getAuthor().getNome());
+            System.out.println("   Autor ID: " + publicacao.getAuthor().getId());
+        } else {
+            System.out.println("❌ ERRO: Autor da publicação é NULL!");
+        }
+
+        // Crie o DTO com os valores
         PublicacaoDTO dto = new PublicacaoDTO(
                 publicacao.getId(),
                 publicacao.getConteudo(),
                 publicacao.getCreatedAt(),
                 publicacao.getCurtidasCount(),
-                publicacao.getAuthor().getId(),
-                publicacao.getAuthor().getNome()
+                publicacao.getAuthor() != null ? publicacao.getAuthor().getId() : null,
+                publicacao.getAuthor() != null ? publicacao.getAuthor().getNome() : null
         );
+
+        System.out.println("✅ DTO criado: " + dto.toString());
         return dto;
     }
 }
