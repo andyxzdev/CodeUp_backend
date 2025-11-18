@@ -21,6 +21,25 @@ public class Usuario {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Publicacao> publicacoes = new ArrayList<>();
 
+    private String bio;
+    private String fotoPerfil;
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
+    }
+
     @ManyToMany
     @JoinTable(
             name = "usuarios_publicacoes_salvas",
@@ -33,9 +52,10 @@ public class Usuario {
         return publicacoesSalvas;
     }
 
-    public void setPublicacoesSalvas() {
+    public void setPublicacoesSalvas(List<Publicacao> publicacoesSalvas) {
         this.publicacoesSalvas = publicacoesSalvas;
     }
+
 
     public Usuario(){}
 

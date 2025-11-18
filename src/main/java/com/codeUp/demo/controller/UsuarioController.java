@@ -3,6 +3,7 @@ package com.codeUp.demo.controller;
 import com.codeUp.demo.RespostaPadrao;
 import com.codeUp.demo.dto.PublicacaoDTO;
 import com.codeUp.demo.dto.UsuarioDTO;
+import com.codeUp.demo.dto.UsuarioUpdateDTO;
 import com.codeUp.demo.model.Usuario;
 import com.codeUp.demo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/usuarios")
+@RequestMapping("/api/usuarios/")
 public class UsuarioController {
     private final UsuarioService usuarioService;
 
@@ -81,5 +82,36 @@ public class UsuarioController {
                 new RespostaPadrao<>(true, "Publicações salvas carregadas", lista)
         );
     }
+
+    @PutMapping("/{id}/perfil")
+    public ResponseEntity<?> atualizarPerfil(@PathVariable Long id, @RequestBody UsuarioUpdateDTO dto) {
+
+        var usuarioOpt = usuarioService.findById(id);
+
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new RespostaPadrao<>(false, "Usuário não encontrado", null));
+        }
+
+        Usuario usuario = usuarioOpt.get();
+
+        // Atualizar apenas o que foi enviado
+        if (dto.getNome() != null) usuario.setNome(dto.getNome());
+        if (dto.getEmail() != null) usuario.setEmail(dto.getEmail());
+        if (dto.getBio() != null) usuario.setBio(dto.getBio());
+        if (dto.getFotoPerfil() != null) usuario.setFotoPerfil(dto.getFotoPerfil());
+        if (dto.getSenha() != null) usuario.setSenha(dto.getSenha()); // futuramente hash
+
+        Usuario salvo = usuarioService.atualizar(usuario);
+
+        UsuarioDTO resposta = new UsuarioDTO(
+                salvo.getId(),
+                salvo.getNome(),
+                salvo.getEmail()
+        );
+
+        return ResponseEntity.ok(new RespostaPadrao<>(true, "Perfil atualizado", resposta));
+    }
+
 
 }
