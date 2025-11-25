@@ -1,29 +1,17 @@
-# ============================
-# 🌟 STAGE 1 — BUILD DO JAR
-# ============================
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-
+# Etapa de build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
-# Copia arquivos do projeto
 COPY pom.xml .
 COPY src ./src
 
-# Baixa dependências e compila
-RUN mvn -U -e -B -DskipTests clean package
+RUN ./mvnw -q -e -DskipTests package
 
-# ============================
-# 🌟 STAGE 2 — RUNTIME
-# ============================
-FROM eclipse-temurin:21-jre
-
+# Etapa de execução
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
-# Copia o jar compilado do stage anterior
 COPY --from=build /app/target/*.jar app.jar
 
-# Render precisa expor 8080
 EXPOSE 8080
-
-# Comando final
 ENTRYPOINT ["java", "-jar", "app.jar"]
