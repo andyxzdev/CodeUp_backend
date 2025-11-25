@@ -1,15 +1,22 @@
-FROM ubuntu:latest AS build
+# ---------- BUILD ----------
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-RUN apt-get install openjdk-17-jdk -y
-COPY . .
+WORKDIR /app
 
-RUN apt-get install maven -y
-RUN mvn clean install
+COPY pom.xml .
+RUN mvn -q dependency:go-offline
 
-FROM openjdk:17-jdk-slim
+COPY src ./src
+
+RUN mvn -q -DskipTests package
+
+# ---------- RUN ----------
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-COPY --from=build /target/deploy_render-1.0.0.jar app.jar
-
-ENTRYPOINT [ "java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
