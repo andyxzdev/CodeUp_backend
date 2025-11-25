@@ -3,5 +3,12 @@ services:
     name: codeup-backend
     env: docker
     plan: free
-    autoDeploy: true
-    healthCheckPath: /api/publicacoes/feed
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
