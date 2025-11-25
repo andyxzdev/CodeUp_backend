@@ -8,53 +8,75 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
+
 @Configuration
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UsuarioService usuarioService;
 
-    // Injete as dependências necessárias
     public SecurityConfig(JwtUtil jwtUtil, UsuarioService usuarioService) {
         this.jwtUtil = jwtUtil;
         this.usuarioService = usuarioService;
     }
 
-    // Crie o JwtFilter manualmente
+    // JWT Filter
     @Bean
     public JwtFilter jwtFilter() {
         return new JwtFilter(jwtUtil, usuarioService);
     }
 
-    // Registre o filtro
+    // Registrar filtro JWT (EXCLUINDO login e registro)
     @Bean
     public FilterRegistrationBean<JwtFilter> jwtFilterRegistration() {
         FilterRegistrationBean<JwtFilter> bean = new FilterRegistrationBean<>();
-        bean.setFilter(jwtFilter()); // Use o bean que criamos acima
-        bean.addUrlPatterns("/api/*");
+
+        bean.setFilter(jwtFilter());
+
+        // 🔥 NÃO FILTRAR LOGIN E REGISTRO
+        bean.addUrlPatterns(
+                "/api/*"
+        );
+        bean.addInitParameter("excludedUrls",
+                "/api/auth/login,/api/usuarios/registrar,/api/publicacoes/temp"
+        );
+
         return bean;
     }
 
-    // Configuração CORS (mantenha igual)
+    // Configuração CORS correta para React Native + Expo
     @Bean
     public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://192.168.1.*:3000");
-        config.addAllowedOrigin("http://10.0.2.2:3000");
+        // 🔥 PERMITIR TUDO NO DEV
+        config.setAllowedOriginPatterns(Arrays.asList("*"));
 
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("PUT");
-        config.addAllowedMethod("DELETE");
-        config.addAllowedMethod("OPTIONS");
+        config.setAllowCredentials(false);
 
-        config.addAllowedHeader("*");
-        config.addExposedHeader("Authorization");
+        config.setAllowedHeaders(Arrays.asList(
+                "Origin",
+                "Content-Type",
+                "Accept",
+                "Authorization"
+        ));
 
+        config.setExposedHeaders(Arrays.asList(
+                "Authorization"
+        ));
+
+        config.setAllowedMethods(Arrays.asList(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return new CorsFilter(source);
     }
 }

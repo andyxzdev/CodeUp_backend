@@ -32,7 +32,7 @@ public class PublicacaoController {
         this.notificacaoService = notificacaoService;
     }
 
-    // Criar publicação (USUÁRIO AUTENTICADO)
+    // Criar publicação autenticada
     @PostMapping
     public ResponseEntity<?> criarPublicacao(
             HttpServletRequest request,
@@ -58,33 +58,19 @@ public class PublicacaoController {
                 .body(new RespostaPadrao<>(true, "Publicação criada com sucesso", out));
     }
 
+    // Criar publicação temporária (debug)
     @PostMapping("/temp")
     public ResponseEntity<?> criarPublicacaoTemp(@RequestBody PublicacaoDTO dto) {
 
         try {
-            System.out.println("🎯 Endpoint /temp chamado!");
-            System.out.println("📦 DTO recebido: " + dto);
-            System.out.println("📝 Conteúdo: " + dto.getConteudo());
-            System.out.println("👤 AuthorId: " + dto.getAuthorId());
-
-            // Buscar QUALQUER usuário existente
             var todosUsuarios = usuarioService.findAll();
-            System.out.println("🔍 Total de usuários encontrados: " + todosUsuarios.size());
 
             if (todosUsuarios.isEmpty()) {
-                System.out.println("❌ Nenhum usuário encontrado no banco!");
                 return ResponseEntity.badRequest()
                         .body(new RespostaPadrao<>(false, "Nenhum usuário cadastrado", null));
             }
 
-            // Listar todos os usuários para debug
-            for (var user : todosUsuarios) {
-                System.out.println("   👤 Usuário: " + user.getId() + " - " + user.getNome());
-            }
-
-            // Usar o primeiro usuário disponível
             var usuario = todosUsuarios.get(0);
-            System.out.println("✅ Usando usuário: " + usuario.getNome() + " (ID: " + usuario.getId() + ")");
 
             Publicacao pub = new Publicacao(dto.getConteudo(), usuario);
             pub.setCreatedAt(LocalDateTime.now());
@@ -92,20 +78,17 @@ public class PublicacaoController {
             Publicacao criada = publicacaoService.criar(pub);
             PublicacaoDTO out = toDTO(criada);
 
-            System.out.println("📝 Publicação criada com ID: " + criada.getId());
-
-            return ResponseEntity.ok()
-                    .body(new RespostaPadrao<>(true, "Publicação criada com sucesso", out));
+            return ResponseEntity.ok(
+                    new RespostaPadrao<>(true, "Publicação criada com sucesso", out)
+            );
 
         } catch (Exception e) {
-            System.out.println("💥 ERRO no endpoint /temp: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500)
-                    .body(new RespostaPadrao<>(false, "Erro interno: " + e.getMessage(), null));
+                    .body(new RespostaPadrao<>(false, "Erro interno", null));
         }
     }
 
-    // FEED
+    // Feed
     @GetMapping("/feed")
     public ResponseEntity<?> feed(
             @RequestParam(defaultValue = "0") int page,
@@ -121,7 +104,7 @@ public class PublicacaoController {
         );
     }
 
-    // Lista publicações de um usuário
+    // Publicações de um usuário
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<?> publicacoesDoUsuario(@PathVariable Long usuarioId) {
 
@@ -148,26 +131,13 @@ public class PublicacaoController {
 
         return publicacaoService.findById(id).map(pub -> {
 
-            // atualiza curtidas
             pub.setCurtidasCount(pub.getCurtidasCount() + 1);
             publicacaoService.salvar(pub);
 
-            // 🔔 cria a notificação para o dono da publicação
             notificacaoService.criarNotificacao(
                     pub.getAuthor(),
                     usuario.get().getNome() + " curtiu sua publicação"
             );
-
-            notificacaoService.criarNotificacao(
-                    pub.getAuthor(),
-                    usuario.get().getNome() + " comentou sua publicação"
-            );
-
-            notificacaoService.criarNotificacao(
-                    pub.getAuthor(),
-                    usuario.get().getNome() + " salvou sua publicação"
-            );
-
 
             return ResponseEntity.ok(
                     new RespostaPadrao<>(true, "Publicação curtida", null)
@@ -177,9 +147,7 @@ public class PublicacaoController {
                 .body(new RespostaPadrao<>(false, "Publicação não encontrada", null)));
     }
 
-
-
-    // Buscar publicação por ID
+    // Buscar por ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         return publicacaoService.findById(id)
@@ -190,7 +158,7 @@ public class PublicacaoController {
                         .body(new RespostaPadrao<>(false, "Publicação não encontrada", null)));
     }
 
-    // Salvar publicação
+    // Salvar publicação (favorito)
     @PostMapping("/{id}/salvar")
     public ResponseEntity<?> salvar(
             HttpServletRequest request,
@@ -219,7 +187,7 @@ public class PublicacaoController {
         );
     }
 
-    // Remover publicação dos salvos
+    // Remover dos salvos
     @DeleteMapping("/{id}/salvar")
     public ResponseEntity<?> removerSalvo(
             HttpServletRequest request,
@@ -248,25 +216,10 @@ public class PublicacaoController {
         );
     }
 
-    // Conversão Entity → DTO
-    // No PublicacaoController.java
+    // Conversão para DTO
     private PublicacaoDTO toDTO(Publicacao publicacao) {
-        System.out.println("🔍 DEBUG toDTO - Iniciando conversão:");
-        System.out.println("   Publicacao ID: " + publicacao.getId());
-        System.out.println("   Conteúdo: " + publicacao.getConteudo());
-        System.out.println("   CreatedAt: " + publicacao.getCreatedAt());
-        System.out.println("   CurtidasCount: " + publicacao.getCurtidasCount());
 
-        // Verifique se o autor está carregado
-        if (publicacao.getAuthor() != null) {
-            System.out.println("   Autor: " + publicacao.getAuthor().getNome());
-            System.out.println("   Autor ID: " + publicacao.getAuthor().getId());
-        } else {
-            System.out.println("❌ ERRO: Autor da publicação é NULL!");
-        }
-
-        // Crie o DTO com os valores
-        PublicacaoDTO dto = new PublicacaoDTO(
+        return new PublicacaoDTO(
                 publicacao.getId(),
                 publicacao.getConteudo(),
                 publicacao.getCreatedAt(),
@@ -274,8 +227,5 @@ public class PublicacaoController {
                 publicacao.getAuthor() != null ? publicacao.getAuthor().getId() : null,
                 publicacao.getAuthor() != null ? publicacao.getAuthor().getNome() : null
         );
-
-        System.out.println("✅ DTO criado: " + dto.toString());
-        return dto;
     }
 }

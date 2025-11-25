@@ -3,7 +3,9 @@ package com.codeUp.demo.model;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "usuarios")
@@ -56,6 +58,32 @@ public class Usuario {
         this.publicacoesSalvas = publicacoesSalvas;
     }
 
+    @ManyToMany
+    @JoinTable(
+            name = "seguidores",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "seguidor_id")
+    )
+    private Set<Usuario> seguidores = new HashSet<>();
+
+    @ManyToMany(mappedBy = "seguidores")
+    private Set<Usuario> seguindo = new HashSet<>();
+
+    public Set<Usuario> getSeguidores() {
+        return seguidores;
+    }
+
+    public void setSeguidores(Set<Usuario> seguidores) {
+        this.seguidores = seguidores;
+    }
+
+    public Set<Usuario> getSeguindo() {
+        return seguindo;
+    }
+
+    public void setSeguindo(Set<Usuario> seguindo) {
+        this.seguindo = seguindo;
+    }
 
     public Usuario(){}
 

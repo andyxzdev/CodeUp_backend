@@ -8,6 +8,9 @@ import com.codeUp.demo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -23,26 +26,35 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
 
-        var usuario = usuarioService.findByEmail(dto.getEmail());
+        var usuarioOpt = usuarioService.findByEmail(dto.getEmail());
 
-        if (usuario.isEmpty() ||
-                !usuario.get().getSenha().equals(dto.getSenha())) {
+        if (usuarioOpt.isEmpty() ||
+                !usuarioOpt.get().getSenha().equals(dto.getSenha())) {
 
             return ResponseEntity.status(401)
                     .body(new RespostaPadrao<>(false, "Credenciais inválidas", null));
         }
 
-        var user = usuario.get();
-        String token = jwtUtil.gerarToken(user.getId(), user.getEmail());
+        var usuario = usuarioOpt.get();
 
-        UsuarioDTO userDTO = new UsuarioDTO(user.getId(), user.getNome(), user.getEmail());
+        // 🔑 Gerar token JWT
+        String token = jwtUtil.gerarToken(usuario.getId(), usuario.getEmail());
+
+        // 📦 Montar objeto usuario para o front
+        Map<String, Object> usuarioMap = new HashMap<>();
+        usuarioMap.put("id", usuario.getId());
+        usuarioMap.put("nome", usuario.getNome());
+        usuarioMap.put("email", usuario.getEmail());
+        usuarioMap.put("bio", usuario.getBio());
+        usuarioMap.put("fotoPerfil", usuario.getFotoPerfil());
+
+        // 📦 Resposta dentro de "dados"
+        Map<String, Object> dados = new HashMap<>();
+        dados.put("token", token);
+        dados.put("usuario", usuarioMap);
 
         return ResponseEntity.ok(
-                new RespostaPadrao<>(true, "Login bem-sucedido",
-                        new Object() {
-                            public String token;
-                            public UsuarioDTO usuario = userDTO;
-                        })
+                new RespostaPadrao<>(true, "Login bem-sucedido", dados)
         );
     }
 }

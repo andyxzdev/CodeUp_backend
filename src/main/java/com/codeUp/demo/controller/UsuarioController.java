@@ -5,7 +5,9 @@ import com.codeUp.demo.dto.PublicacaoDTO;
 import com.codeUp.demo.dto.UsuarioDTO;
 import com.codeUp.demo.dto.UsuarioUpdateDTO;
 import com.codeUp.demo.model.Usuario;
+import com.codeUp.demo.service.NotificacaoService;
 import com.codeUp.demo.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,9 +21,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
     private final UsuarioService usuarioService;
+    private final NotificacaoService notificacaoService;
 
-    public UsuarioController(UsuarioService service) {
+    public UsuarioController(UsuarioService service, NotificacaoService notificacaoService) {
         this.usuarioService = service;
+        this.notificacaoService = notificacaoService;
     }
 
     // Criando usuário
@@ -177,4 +181,46 @@ public class UsuarioController {
                     .body(new RespostaPadrao<>(false, "Erro ao atualizar perfil", null));
         }
     }
+
+    @PostMapping("/{id}/seguir")
+    public ResponseEntity<?> seguir(
+            @PathVariable Long id,
+            HttpServletRequest request
+    ){
+        Long seguidorId = (Long) request.getAttribute("userId");
+
+        try {
+            usuarioService.seguir(seguidorId, id);
+
+            // Criar notificação
+            notificacaoService.criarNotificacao(
+                    usuarioService.findById(id).get(),
+                    usuarioService.findById(seguidorId).get().getNome() + " começou a seguir você!"
+            );
+
+            return ResponseEntity.ok(
+                    new RespostaPadrao<>(true, "Agora você está seguindo este usuário", null)
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new RespostaPadrao<>(false, e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/{id}/seguir")
+    public ResponseEntity<?> deixarDeSeguir(
+            @PathVariable Long id,
+            HttpServletRequest request
+    ){
+        Long seguidorId = (Long) request.getAttribute("userId");
+
+        usuarioService.deixarDeSeguir(seguidorId, id);
+
+        return ResponseEntity.ok(
+                new RespostaPadrao<>(true, "Você deixou de seguir este usuário", null)
+        );
+    }
+
+
 }
