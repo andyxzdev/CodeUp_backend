@@ -4,6 +4,7 @@ import com.codeUp.demo.RespostaPadrao;
 import com.codeUp.demo.dto.MensagemDTO;
 import com.codeUp.demo.model.Mensagem;
 import com.codeUp.demo.service.MensagemService;
+import com.codeUp.demo.service.NotificacaoService;
 import com.codeUp.demo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +17,14 @@ public class ChatController {
 
     private final MensagemService mensagemService;
     private final UsuarioService usuarioService;
+    private final NotificacaoService notificacaoService;
 
-    public ChatController(MensagemService mensagemService, UsuarioService usuarioService) {
+    public ChatController(MensagemService mensagemService,
+                          UsuarioService usuarioService,
+                          NotificacaoService notificacaoService) {
         this.mensagemService = mensagemService;
         this.usuarioService = usuarioService;
+        this.notificacaoService = notificacaoService;
     }
 
     @PostMapping("/enviar")
@@ -38,6 +43,15 @@ public class ChatController {
         );
 
         Mensagem enviada = mensagemService.enviar(msg);
+
+        // 🔥 Notificação de mensagem
+        String texto = remetente.get().getNome() + " te enviou uma mensagem";
+        notificacaoService.criarNotificacao(
+                destinatario.get(),
+                texto,
+                "mensagem",
+                enviada.getId()
+        );
 
         return ResponseEntity.ok("Mensagem enviada");
     }
@@ -75,5 +89,4 @@ public class ChatController {
                 new RespostaPadrao<>(true, "Conversas carregadas", conversas)
         );
     }
-
 }

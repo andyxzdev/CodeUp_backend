@@ -13,44 +13,47 @@ public class Notificacao {
 
     private String mensagem;
 
-    private boolean lida = false; // true quando o usuário visualizar
+    // Tipo: "mensagem", "curtida", "comentario", "seguir", "salvar", "sistema", ...
+    private String tipo;
+
+    // id de referência opcional (ex: id da publicação, id da mensagem, id do usuário que gerou)
+    private Long referenciaId;
+
+    private boolean lida = false;
 
     private LocalDateTime createdAt;
 
-    // Usuário que RECEBE a notificação
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
     public Notificacao() {}
 
-    public Notificacao(String mensagem, Usuario usuario) {
+    public Notificacao(String mensagem, String tipo, Long referenciaId, Usuario usuario) {
         this.mensagem = mensagem;
+        this.tipo = tipo;
+        this.referenciaId = referenciaId;
         this.usuario = usuario;
         this.createdAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
+    // getters / setters
 
-    public String getMensagem() {
-        return mensagem;
-    }
+    public Long getId() { return id; }
+    public String getMensagem() { return mensagem; }
+    public void setMensagem(String mensagem) { this.mensagem = mensagem; }
 
-    public boolean isLida() {
-        return lida;
-    }
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
 
-    public void setLida(boolean lida) {
-        this.lida = lida;
-    }
+    public Long getReferenciaId() { return referenciaId; }
+    public void setReferenciaId(Long referenciaId) { this.referenciaId = referenciaId; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public boolean isLida() { return lida; }
+    public void setLida(boolean lida) { this.lida = lida; }
 
-    public Usuario getUsuario() {
-        return usuario;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 }

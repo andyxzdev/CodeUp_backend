@@ -61,7 +61,6 @@ public class PublicacaoController {
     // Criar publicação temporária (debug)
     @PostMapping("/temp")
     public ResponseEntity<?> criarPublicacaoTemp(@RequestBody PublicacaoDTO dto) {
-
         try {
             var todosUsuarios = usuarioService.findAll();
 
@@ -117,27 +116,42 @@ public class PublicacaoController {
                 new RespostaPadrao<>(true, "Publicações do usuário", lista));
     }
 
-    // Curtir publicação
+    // Curtir publicação (AUTENTICADO)
     @PostMapping("/{id}/curtida")
     public ResponseEntity<?> curtir(
-            @PathVariable Long id,
-            @RequestParam Long usuarioId
+            HttpServletRequest request,
+            @PathVariable Long id
     ) {
+        // pegar quem está autenticado pelo token
+        Long usuarioId = (Long) request.getAttribute("userId");
+        if (usuarioId == null) {
+            return ResponseEntity.status(401)
+                    .body(new RespostaPadrao<>(false, "Token inválido ou ausente", null));
+        }
 
-        var usuario = usuarioService.findById(usuarioId);
-        if (usuario.isEmpty())
+        var usuarioOpt = usuarioService.findById(usuarioId);
+        if (usuarioOpt.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Usuário inválido", null));
+        }
+
+        var usuario = usuarioOpt.get();
 
         return publicacaoService.findById(id).map(pub -> {
-
+            // atualiza curtidas
             pub.setCurtidasCount(pub.getCurtidasCount() + 1);
             publicacaoService.salvar(pub);
 
-            notificacaoService.criarNotificacao(
-                    pub.getAuthor(),
-                    usuario.get().getNome() + " curtiu sua publicação"
-            );
+            // LOG para debug (quem curtiu, id da pub, autor)
+            System.out.println("🔔 Publicacao curtida - pubId=" + id + " por userId=" + usuario.getId() + " (" + usuario.getNome() + ") -> authorId=" + (pub.getAuthor() != null ? pub.getAuthor().getId() : "null"));
+
+            // cria a notificação para o dono da publicação (apenas curtida)
+            if (pub.getAuthor() != null && !pub.getAuthor().getId().equals(usuario.getId())) {
+                notificacaoService.criarNotificacao(
+                        pub.getAuthor(),
+                        usuario.getNome() + " curtiu sua publicação"
+                );
+            }
 
             return ResponseEntity.ok(
                     new RespostaPadrao<>(true, "Publicação curtida", null)
@@ -181,6 +195,14 @@ public class PublicacaoController {
         var pub = publicacao.get();
         pub.setSalvosCount(pub.getSalvosCount() + 1);
         publicacaoService.salvar(pub);
+
+        // criar notificação de "salvo"
+        if (pub.getAuthor() != null && !pub.getAuthor().getId().equals(usuario.get().getId())) {
+            notificacaoService.criarNotificacao(
+                    pub.getAuthor(),
+                    usuario.get().getNome() + " salvou sua publicação"
+            );
+        }
 
         return ResponseEntity.ok(
                 new RespostaPadrao<>(true, "Publicação salva", null)

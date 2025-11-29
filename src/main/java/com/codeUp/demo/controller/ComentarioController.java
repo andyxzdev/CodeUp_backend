@@ -4,6 +4,7 @@ import com.codeUp.demo.RespostaPadrao;
 import com.codeUp.demo.dto.ComentarioDTO;
 import com.codeUp.demo.model.Comentario;
 import com.codeUp.demo.service.ComentarioService;
+import com.codeUp.demo.service.NotificacaoService;
 import com.codeUp.demo.service.PublicacaoService;
 import com.codeUp.demo.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,17 +22,19 @@ public class ComentarioController {
     private final ComentarioService comentarioService;
     private final UsuarioService usuarioService;
     private final PublicacaoService publicacaoService;
+    private final NotificacaoService notificacaoService;
 
-    public ComentarioController(
-            ComentarioService comentarioService,
-            UsuarioService usuarioService,
-            PublicacaoService publicacaoService) {
+    public ComentarioController(ComentarioService comentarioService,
+                                UsuarioService usuarioService,
+                                PublicacaoService publicacaoService,
+                                NotificacaoService notificacaoService) {
         this.comentarioService = comentarioService;
         this.usuarioService = usuarioService;
         this.publicacaoService = publicacaoService;
+        this.notificacaoService = notificacaoService;
     }
 
-    // Criar comentário (USUÁRIO AUTENTICADO)
+    // Criar comentário (AUTENTICADO)
     @PostMapping
     public ResponseEntity<?> criar(
             HttpServletRequest request,
@@ -42,30 +45,41 @@ public class ComentarioController {
             return ResponseEntity.status(401)
                     .body(new RespostaPadrao<>(false, "Token inválido ou ausente", null));
 
-        // Validar usuário autenticado
         var usuario = usuarioService.findById(userId);
         if (usuario.isEmpty())
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Usuário inválido", null));
 
-        // Validar publicação
         var publicacao = publicacaoService.findById(dto.getPublicacaoId());
         if (publicacao.isEmpty())
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Publicação inválida", null));
 
-        // Criar e salvar comentário
-        Comentario comentario = new Comentario(dto.getConteudo(), usuario.get(), publicacao.get());
+        Comentario comentario = new Comentario(
+                dto.getConteudo(),
+                usuario.get(),
+                publicacao.get()
+        );
         comentario.setCreatedAt(LocalDateTime.now());
 
         Comentario salvo = comentarioService.criar(comentario);
+
+        // 🔥 Notificação de comentário
+        if (!usuario.get().getId().equals(publicacao.get().getAuthor().getId())) {
+            notificacaoService.criarNotificacao(
+                    publicacao.get().getAuthor(),
+                    usuario.get().getNome() + " comentou: \"" + dto.getConteudo() + "\"",
+                    "comentario",
+                    publicacao.get().getId()
+            );
+        }
 
         return ResponseEntity.ok(
                 new RespostaPadrao<>(true, "Comentário criado", toDTO(salvo))
         );
     }
 
-    // Listar comentários de uma publicação
+    // Listar comentários de publicação
     @GetMapping("/publicacao/{publicacaoId}")
     public ResponseEntity<?> listar(@PathVariable long publicacaoId) {
 
@@ -84,15 +98,14 @@ public class ComentarioController {
         );
     }
 
-    // Conversão Entity → DTO
-    private ComentarioDTO toDTO(Comentario comentario) {
+    private ComentarioDTO toDTO(Comentario c) {
         ComentarioDTO dto = new ComentarioDTO();
-        dto.setId(comentario.getId());
-        dto.setConteudo(comentario.getConteudo());
-        dto.setCreatedAt(comentario.getCreatedAt());
-        dto.setAuthorId(comentario.getAuthor().getId());
-        dto.setAuthorName(comentario.getAuthor().getNome());
-        dto.setPublicacaoId(comentario.getPublicacao().getId());
+        dto.setId(c.getId());
+        dto.setConteudo(c.getConteudo());
+        dto.setCreatedAt(c.getCreatedAt());
+        dto.setAuthorId(c.getAuthor().getId());
+        dto.setAuthorName(c.getAuthor().getNome());
+        dto.setPublicacaoId(c.getPublicacao().getId());
         return dto;
     }
 }

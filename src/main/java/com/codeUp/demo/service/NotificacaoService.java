@@ -16,9 +16,15 @@ public class NotificacaoService {
         this.repo = repo;
     }
 
+    // Cria notificação com tipo e referência opcional
+    public Notificacao criarNotificacao(Usuario usuario, String mensagem, String tipo, Long referenciaId) {
+        Notificacao n = new Notificacao(mensagem, tipo, referenciaId, usuario);
+        return repo.save(n);
+    }
+
+    // Compatível com anteriores (mensagem simples)
     public void criarNotificacao(Usuario usuario, String mensagem) {
-        Notificacao notificacao = new Notificacao(mensagem, usuario);
-        repo.save(notificacao);
+        criarNotificacao(usuario, mensagem, "sistema", null);
     }
 
     public List<Notificacao> listarNotificacoes(Usuario usuario) {

@@ -20,15 +20,17 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
+
     private final UsuarioService usuarioService;
     private final NotificacaoService notificacaoService;
 
-    public UsuarioController(UsuarioService service, NotificacaoService notificacaoService) {
-        this.usuarioService = service;
+    public UsuarioController(UsuarioService usuarioService,
+                             NotificacaoService notificacaoService) {
+        this.usuarioService = usuarioService;
         this.notificacaoService = notificacaoService;
     }
 
-    // Criando usuário
+    // Criar usuário
     @PostMapping("/registrar")
     public ResponseEntity<?> registrar(@RequestBody UsuarioDTO dto) {
         try {
@@ -42,9 +44,9 @@ public class UsuarioController {
             usuarioResponse.put("bio", criado.getBio());
             usuarioResponse.put("fotoPerfil", criado.getFotoPerfil());
 
-            // ✅ CORRIGIDO: Barra antes do ID
             return ResponseEntity.created(URI.create("/api/usuarios/" + criado.getId()))
                     .body(new RespostaPadrao<>(true, "Usuário criado com sucesso", usuarioResponse));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Erro ao criar usuário: " + e.getMessage(), null));
@@ -67,6 +69,7 @@ public class UsuarioController {
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(new RespostaPadrao<>(true, "Usuários carregados", usuarios));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Erro ao carregar usuários", null));
@@ -84,8 +87,9 @@ public class UsuarioController {
                     usuarioCompleto.put("bio", u.getBio());
                     usuarioCompleto.put("fotoPerfil", u.getFotoPerfil());
 
-                    // ✅ PADRONIZADO: Usando RespostaPadrao
-                    return ResponseEntity.ok(new RespostaPadrao<>(true, "Perfil carregado com sucesso", usuarioCompleto));
+                    return ResponseEntity.ok(
+                            new RespostaPadrao<>(true, "Perfil carregado com sucesso", usuarioCompleto)
+                    );
                 })
                 .orElse(ResponseEntity.status(404)
                         .body(new RespostaPadrao<>(false, "Usuário não encontrado", null)));
@@ -95,6 +99,7 @@ public class UsuarioController {
     public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody UsuarioDTO dto) {
         try {
             return usuarioService.findById(id).map(existing -> {
+
                 existing.setNome(dto.getNome() != null ? dto.getNome() : existing.getNome());
                 existing.setEmail(dto.getEmail() != null ? dto.getEmail() : existing.getEmail());
                 if (dto.getSenha() != null) existing.setSenha(dto.getSenha());
@@ -108,9 +113,13 @@ public class UsuarioController {
                 usuarioResponse.put("bio", salvo.getBio());
                 usuarioResponse.put("fotoPerfil", salvo.getFotoPerfil());
 
-                return ResponseEntity.ok(new RespostaPadrao<>(true, "Usuário atualizado com sucesso", usuarioResponse));
+                return ResponseEntity.ok(
+                        new RespostaPadrao<>(true, "Usuário atualizado com sucesso", usuarioResponse)
+                );
+
             }).orElse(ResponseEntity.status(404)
                     .body(new RespostaPadrao<>(false, "Usuário não encontrado", null)));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Erro ao atualizar usuário", null));
@@ -139,8 +148,8 @@ public class UsuarioController {
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(
-                    new RespostaPadrao<>(true, "Publicações salvas carregadas", lista)
-            );
+                    new RespostaPadrao<>(true, "Publicações salvas carregadas", lista));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Erro ao carregar publicações salvas", null));
@@ -148,7 +157,8 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}/perfil")
-    public ResponseEntity<?> atualizarPerfil(@PathVariable Long id, @RequestBody UsuarioUpdateDTO dto) {
+    public ResponseEntity<?> atualizarPerfil(@PathVariable Long id,
+                                             @RequestBody UsuarioUpdateDTO dto) {
         try {
             var usuarioOpt = usuarioService.findById(id);
 
@@ -159,7 +169,6 @@ public class UsuarioController {
 
             Usuario usuario = usuarioOpt.get();
 
-            // Atualizar apenas o que foi enviado
             if (dto.getNome() != null) usuario.setNome(dto.getNome());
             if (dto.getEmail() != null) usuario.setEmail(dto.getEmail());
             if (dto.getBio() != null) usuario.setBio(dto.getBio());
@@ -175,27 +184,38 @@ public class UsuarioController {
             usuarioResponse.put("bio", salvo.getBio());
             usuarioResponse.put("fotoPerfil", salvo.getFotoPerfil());
 
-            return ResponseEntity.ok(new RespostaPadrao<>(true, "Perfil atualizado com sucesso", usuarioResponse));
+            return ResponseEntity.ok(
+                    new RespostaPadrao<>(true, "Perfil atualizado com sucesso", usuarioResponse)
+            );
+
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new RespostaPadrao<>(false, "Erro ao atualizar perfil", null));
         }
     }
 
+    // ---------------------------
+    // SEGUIR USUÁRIO (COM NOTIFICAÇÃO)
+    // ---------------------------
     @PostMapping("/{id}/seguir")
     public ResponseEntity<?> seguir(
             @PathVariable Long id,
-            HttpServletRequest request
-    ){
+            HttpServletRequest request) {
+
         Long seguidorId = (Long) request.getAttribute("userId");
 
         try {
             usuarioService.seguir(seguidorId, id);
 
-            // Criar notificação
+            var seguido = usuarioService.findById(id).get();
+            var seguidor = usuarioService.findById(seguidorId).get();
+
+            // 🔥 Agora cria notificacao COMPLETA (com tipo + referencia)
             notificacaoService.criarNotificacao(
-                    usuarioService.findById(id).get(),
-                    usuarioService.findById(seguidorId).get().getNome() + " começou a seguir você!"
+                    seguido,
+                    seguidor.getNome() + " começou a seguir você!",
+                    "seguir",
+                    seguidorId
             );
 
             return ResponseEntity.ok(
@@ -211,8 +231,8 @@ public class UsuarioController {
     @DeleteMapping("/{id}/seguir")
     public ResponseEntity<?> deixarDeSeguir(
             @PathVariable Long id,
-            HttpServletRequest request
-    ){
+            HttpServletRequest request) {
+
         Long seguidorId = (Long) request.getAttribute("userId");
 
         usuarioService.deixarDeSeguir(seguidorId, id);
@@ -221,6 +241,4 @@ public class UsuarioController {
                 new RespostaPadrao<>(true, "Você deixou de seguir este usuário", null)
         );
     }
-
-
 }
