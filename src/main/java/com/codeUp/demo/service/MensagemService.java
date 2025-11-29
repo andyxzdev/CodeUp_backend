@@ -1,15 +1,11 @@
 package com.codeUp.demo.service;
 
-import com.codeUp.demo.dto.ConversaResumoDTO;
 import com.codeUp.demo.model.Mensagem;
-import com.codeUp.demo.model.Usuario;
 import com.codeUp.demo.repository.MensagemRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,56 +13,61 @@ public class MensagemService {
 
     private final MensagemRepository repository;
 
-    public MensagemService(MensagemRepository repository){
+    public MensagemService(MensagemRepository repository) {
         this.repository = repository;
     }
 
-    public Mensagem enviar(Mensagem mensagem){
+    public Mensagem enviar(Mensagem mensagem) {
+        mensagem.setEnviadoEm(LocalDateTime.now());
         return repository.save(mensagem);
     }
 
-    public List<Mensagem> conversa(Long usuario1, Long usuario2){
-        return repository.findByRemetenteIdAndDestinatarioIdOrderByEnviadoEm(usuario1, usuario2);
+    public List<Mensagem> conversa(Long u1, Long u2) {
+        return repository.buscarConversa(u1, u2);
     }
 
-    public List<Mensagem> listarMensagensDoUsuario(Long usuarioId) {
-        return repository.findByRemetenteIdOrDestinatarioIdOrderByEnviadoEmDesc(usuarioId, usuarioId);
-    }
+    public List<Map<String, Object>> conversasRecentes(Long usuarioId) {
 
-    public List<ConversaResumoDTO> conversasRecentes(Long usuarioId) {
+        var mensagens = repository.buscarMensagensRecentes(usuarioId);
 
-        List<Mensagem> mensagens = listarMensagensDoUsuario(usuarioId);
+        if (mensagens == null) mensagens = new ArrayList<>();
 
-        Map<Long, Mensagem> ultimoPorUsuario = new HashMap<>();
+        // Agrupar por usuário (quem conversa comigo)
+        Map<Long, Mensagem> ultimaMensagemPorUsuario = new HashMap<>();
 
-        for (Mensagem msg : mensagens) {
+        for (Mensagem m : mensagens) {
 
-            Long outroId = msg.getRemetente().getId().equals(usuarioId) ?
-                    msg.getDestinatario().getId() :
-                    msg.getRemetente().getId();
+            Long outroId = m.getRemetente().getId().equals(usuarioId)
+                    ? m.getDestinatario().getId()
+                    : m.getRemetente().getId();
 
-            if (!ultimoPorUsuario.containsKey(outroId)) {
-                ultimoPorUsuario.put(outroId, msg);
-            }
+            // adiciona apenas a última mensagem de cada conversa
+            ultimaMensagemPorUsuario.putIfAbsent(outroId, m);
         }
 
-        return ultimoPorUsuario.entrySet().stream()
-                .map(entry -> {
-                    Mensagem msg = entry.getValue();
-                    Usuario outro = msg.getRemetente().getId().equals(usuarioId)
-                            ? msg.getDestinatario()
-                            : msg.getRemetente();
+        // Converter para DTO simples
+        return ultimaMensagemPorUsuario.values().stream()
+                .map(msg -> {
+                    Long outroId = msg.getRemetente().getId().equals(usuarioId)
+                            ? msg.getDestinatario().getId()
+                            : msg.getRemetente().getId();
 
-                    return new ConversaResumoDTO(
-                            outro.getId(),
-                            outro.getNome(),
-                            msg.getConteudo(),
-                            msg.getEnviadoEm()
-                    );
+                    String outroNome = msg.getRemetente().getId().equals(usuarioId)
+                            ? msg.getDestinatario().getNome()
+                            : msg.getRemetente().getNome();
+
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("usuarioId", outroId);
+                    map.put("usuarioNome", outroNome);
+                    map.put("ultimaMensagem", msg.getConteudo());
+                    map.put("enviadoEm", msg.getEnviadoEm());
+                    return map;
                 })
-                .sorted(Comparator.comparing(ConversaResumoDTO::getEnviadoEm).reversed())
+                // ORDENAR POR LOCALDATETIME CORRETAMENTE 🔥
+                .sorted(Comparator.comparing(
+                        m -> (LocalDateTime) m.get("enviadoEm"),
+                        Comparator.reverseOrder()
+                ))
                 .collect(Collectors.toList());
     }
-
-
 }
