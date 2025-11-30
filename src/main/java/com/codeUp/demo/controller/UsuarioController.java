@@ -143,7 +143,9 @@ public class UsuarioController {
                             publicacao.getCreatedAt(),
                             publicacao.getCurtidasCount(),
                             publicacao.getAuthor().getId(),
-                            publicacao.getAuthor().getNome()
+                            publicacao.getAuthor().getNome(),
+                            publicacao.getComentariosCount(),
+                            publicacao.getImageUrl()
                     ))
                     .collect(Collectors.toList());
 

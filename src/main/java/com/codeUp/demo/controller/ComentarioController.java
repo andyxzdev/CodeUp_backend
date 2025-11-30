@@ -7,8 +7,10 @@ import com.codeUp.demo.service.ComentarioService;
 import com.codeUp.demo.service.NotificacaoService;
 import com.codeUp.demo.service.PublicacaoService;
 import com.codeUp.demo.service.UsuarioService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,7 +36,6 @@ public class ComentarioController {
         this.notificacaoService = notificacaoService;
     }
 
-    // Criar comentário (AUTENTICADO)
     @PostMapping
     public ResponseEntity<?> criar(
             HttpServletRequest request,
@@ -64,13 +65,11 @@ public class ComentarioController {
 
         Comentario salvo = comentarioService.criar(comentario);
 
-        // 🔥 Notificação de comentário
+        // notificação
         if (!usuario.get().getId().equals(publicacao.get().getAuthor().getId())) {
             notificacaoService.criarNotificacao(
                     publicacao.get().getAuthor(),
-                    usuario.get().getNome() + " comentou: \"" + dto.getConteudo() + "\"",
-                    "comentario",
-                    publicacao.get().getId()
+                    usuario.get().getNome() + " comentou: \"" + dto.getConteudo() + "\""
             );
         }
 
@@ -79,7 +78,6 @@ public class ComentarioController {
         );
     }
 
-    // Listar comentários de publicação
     @GetMapping("/publicacao/{publicacaoId}")
     public ResponseEntity<?> listar(@PathVariable long publicacaoId) {
 

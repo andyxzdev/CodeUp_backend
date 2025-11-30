@@ -1,12 +1,14 @@
 package com.codeUp.demo.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "publicacoes")
 public class Publicacao {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,79 +23,63 @@ public class Publicacao {
     private int compartilhamentoCount = 0;
     private int salvosCount = 0;
 
+    @Column(nullable = true)
+    private String imageUrl; // 🔥 NOVO: URL da imagem salva
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private Usuario author;
 
-    public Publicacao(){}
+    @OneToMany(mappedBy = "publicacao", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comentario> comentarios = new ArrayList<>();
 
-    public Publicacao(String conteudo, Usuario author){
+    public Publicacao() {}
+
+    public Publicacao(String conteudo, Usuario author) {
         this.conteudo = conteudo;
         this.author = author;
         this.createdAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
+    // GETTERS & SETTERS
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
 
-    public String getConteudo() {
-        return conteudo;
-    }
+    public void setId(Long id) { this.id = id; }
 
-    public void setConteudo(String conteudo) {
-        this.conteudo = conteudo;
-    }
+    public String getConteudo() { return conteudo; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public void setConteudo(String conteudo) { this.conteudo = conteudo; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
-    public int getCurtidasCount() {
-        return curtidasCount;
-    }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setCurtidasCount(int curtidasCount) {
-        this.curtidasCount = curtidasCount;
-    }
+    public int getCurtidasCount() { return curtidasCount; }
 
-    public int getComentariosCount() {
-        return comentariosCount;
-    }
+    public void setCurtidasCount(int curtidasCount) { this.curtidasCount = curtidasCount; }
 
-    public void setComentariosCount(int comentariosCount) {
-        this.comentariosCount = comentariosCount;
-    }
+    public int getComentariosCount() { return comentariosCount; }
 
-    public int getCompartilhamentoCount() {
-        return compartilhamentoCount;
-    }
+    public void setComentariosCount(int comentariosCount) { this.comentariosCount = comentariosCount; }
 
-    public void setCompartilhamentoCount(int compartilhamentoCount) {
-        this.compartilhamentoCount = compartilhamentoCount;
-    }
+    public int getCompartilhamentoCount() { return compartilhamentoCount; }
 
-    public int getSalvosCount() {
-        return salvosCount;
-    }
+    public void setCompartilhamentoCount(int compartilhamentoCount) { this.compartilhamentoCount = compartilhamentoCount; }
 
-    public void setSalvosCount(int salvosCount) {
-        this.salvosCount = salvosCount;
-    }
+    public int getSalvosCount() { return salvosCount; }
 
-    public Usuario getAuthor() {
-        return author;
-    }
+    public void setSalvosCount(int salvosCount) { this.salvosCount = salvosCount; }
 
-    public void setAuthor(Usuario author) {
-        this.author = author;
-    }
+    public Usuario getAuthor() { return author; }
+
+    public void setAuthor(Usuario author) { this.author = author; }
+
+    public List<Comentario> getComentarios() { return comentarios; }
+
+    public void setComentarios(List<Comentario> comentarios) { this.comentarios = comentarios; }
+
+    public String getImageUrl() { return imageUrl; }
+
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }
