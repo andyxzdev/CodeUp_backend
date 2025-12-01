@@ -17,25 +17,21 @@ public class Publicacao {
 
     private LocalDateTime createdAt;
 
-    // contador (mantido para compatibilidade com DTO/ front)
     private int curtidasCount = 0;
     private int comentariosCount = 0;
     private int compartilhamentoCount = 0;
     private int salvosCount = 0;
 
     @Column(nullable = true)
-    private String imageUrl; // URL da imagem salva
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private Usuario author;
 
-    @OneToMany(mappedBy = "publicacao", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comentario> comentarios = new ArrayList<>();
-
-    // =========================
-    // Curtidas (quem curtiu)
-    // =========================
+    // =============================
+    // 🔥 CURTIDAS (faltava isso!)
+    // =============================
     @ManyToMany
     @JoinTable(
             name = "publicacao_curtidas",
@@ -44,6 +40,25 @@ public class Publicacao {
     )
     private Set<Usuario> curtidas = new HashSet<>();
 
+    public Set<Usuario> getCurtidas() {
+        return curtidas;
+    }
+
+    public void adicionarCurtida(Usuario usuario) {
+        this.curtidas.add(usuario);
+    }
+
+    public void removerCurtidaPorUsuarioId(Long usuarioId) {
+        this.curtidas.removeIf(u -> u.getId().equals(usuarioId));
+    }
+
+    // =============================
+    // COMENTÁRIOS
+    // =============================
+    @OneToMany(mappedBy = "publicacao", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comentario> comentarios = new ArrayList<>();
+
+    // construtores
     public Publicacao() {}
 
     public Publicacao(String conteudo, Usuario author) {
@@ -52,8 +67,7 @@ public class Publicacao {
         this.createdAt = LocalDateTime.now();
     }
 
-    // GETTERS & SETTERS
-
+    // GETTERS E SETTERS
     public Long getId() { return id; }
 
     public void setId(Long id) { this.id = id; }
@@ -93,27 +107,4 @@ public class Publicacao {
     public String getImageUrl() { return imageUrl; }
 
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    public Set<Usuario> getCurtidas() { return curtidas; }
-
-    public void setCurtidas(Set<Usuario> curtidas) { this.curtidas = curtidas; }
-
-    // helpers
-    public void adicionarCurtida(Usuario u) {
-        this.curtidas.add(u);
-        this.curtidasCount = this.curtidas.size();
-    }
-
-    public void removerCurtidaPorUsuarioId(Long usuarioId) {
-        this.curtidas.removeIf(u -> u.getId().equals(usuarioId));
-        this.curtidasCount = this.curtidas.size();
-    }
-
-    public void incrementarComentariosCount() {
-        this.comentariosCount = this.comentarios.size();
-    }
-
-    public void atualizarSalvosCount(int novoValor) {
-        this.salvosCount = novoValor;
-    }
 }

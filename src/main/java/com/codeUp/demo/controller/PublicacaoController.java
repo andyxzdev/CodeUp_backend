@@ -2,6 +2,7 @@ package com.codeUp.demo.controller;
 
 import com.codeUp.demo.RespostaPadrao;
 import com.codeUp.demo.dto.PublicacaoDTO;
+import com.codeUp.demo.model.Comentario;
 import com.codeUp.demo.model.Publicacao;
 import com.codeUp.demo.model.Usuario;
 import com.codeUp.demo.service.PublicacaoService;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/publicacoes")
@@ -100,6 +102,82 @@ public class PublicacaoController {
                 .toList();
 
         return ResponseEntity.ok(new RespostaPadrao<>(true, "OK", lista));
+    }
+
+    // CURTIR
+    @PostMapping("/{id}/curtida")
+    public ResponseEntity<?> curtir(
+            HttpServletRequest request,
+            @PathVariable Long id
+    ) {
+
+        Long userId = (Long) request.getAttribute("userId");
+
+        Map<String, Object> resultado = publicacaoService.curtir(id, userId);
+
+        return ResponseEntity.ok(new RespostaPadrao<>(
+                true,
+                "Curtida atualizada!",
+                resultado
+        ));
+    }
+
+    @DeleteMapping("/{id}/curtida")
+    public ResponseEntity<?> removerCurtida(
+            HttpServletRequest request,
+            @PathVariable Long id
+    ) {
+        Long userId = (Long) request.getAttribute("userId");
+        publicacaoService.removerCurtida(id, userId);
+
+        return ResponseEntity.ok(new RespostaPadrao<>(true, "Curtida removida!", null));
+    }
+
+    // SALVAR
+    @PostMapping("/{id}/salvar")
+    public ResponseEntity<?> salvar(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
+        publicacaoService.salvarPublicacao(id, userId);
+        return ResponseEntity.ok(new RespostaPadrao<>(true, "Publicação salva!", null));
+    }
+
+    // REMOVER DOS SALVOS
+    @DeleteMapping("/{id}/salvar")
+    public ResponseEntity<?> removerSalvar(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
+        publicacaoService.removerDosSalvos(id, userId);
+        return ResponseEntity.ok(new RespostaPadrao<>(true, "Removido dos salvos!", null));
+    }
+
+    // ENVIAR COMENTÁRIO
+    @PostMapping("/{id}/comentarios")
+    public ResponseEntity<?> comentar(
+            HttpServletRequest request,
+            @PathVariable Long id,
+            @RequestBody String conteudo
+    ) {
+        Long userId = (Long) request.getAttribute("userId");
+        Comentario comentario = publicacaoService.comentar(id, userId, conteudo);
+        return ResponseEntity.ok(new RespostaPadrao<>(true, "Comentário enviado!", comentario));
+    }
+
+    // LISTAR COMENTÁRIOS
+    @GetMapping("/{id}/comentarios")
+    public ResponseEntity<?> listarComentarios(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                new RespostaPadrao<>(true, "Comentários carregados", publicacaoService.listarComentarios(id))
+        );
+    }
+
+    // EXCLUIR COMENTÁRIO
+    @DeleteMapping("/comentarios/{comentarioId}")
+    public ResponseEntity<?> apagarComentario(
+            HttpServletRequest request,
+            @PathVariable Long comentarioId
+    ) {
+        Long userId = (Long) request.getAttribute("userId");
+        publicacaoService.apagarComentario(comentarioId, userId);
+        return ResponseEntity.ok(new RespostaPadrao<>(true, "Comentário deletado!", null));
     }
 
     // --------------------------------------------------------------------
