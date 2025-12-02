@@ -3,12 +3,17 @@ services:
     name: codeup-backend
     env: docker
     plan: free
+    autoDeploy: true
     region: oregon
-    dockerfilePath: ./Dockerfile
+    dockerCommand: null
     envVars:
-      - key: SPRING_DATASOURCE_URL
-        sync: false
-      - key: SPRING_DATASOURCE_USERNAME
-        sync: false
-      - key: SPRING_DATASOURCE_PASSWORD
-        sync: false
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JWT_SECRET
+        value: suaChaveSecretaAqui
+      - key: DATABASE_URL
+        value: jdbc:postgresql://sua-url
+      - key: DATABASE_USER
+        value: user
+      - key: DATABASE_PASSWORD
+        value: pass
