@@ -6,14 +6,19 @@ services:
     autoDeploy: true
     region: oregon
     dockerCommand: null
+
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+
       - key: JWT_SECRET
-        value: suaChaveSecretaAqui
+        value: e8ab94b784ff31de97a2f0b9c49af2c7d0e25b627cbd1a551ac2f8dcb47eea91
+
       - key: DATABASE_URL
-        value: jdbc:postgresql://sua-url
+        value: jdbc:postgresql://dpg-<HOST>:5432/deploy_render_cdfo
+
       - key: DATABASE_USER
-        value: user
+        value: deploy_render_cdfo_user
+
       - key: DATABASE_PASSWORD
-        value: pass
+        value: H44mqorGy3eu5n4ZcyqVyPKRjUPG4Lnc
