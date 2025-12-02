@@ -26,22 +26,6 @@ public class Usuario {
     private String bio;
     private String fotoPerfil;
 
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
-    public String getFotoPerfil() {
-        return fotoPerfil;
-    }
-
-    public void setFotoPerfil(String fotoPerfil) {
-        this.fotoPerfil = fotoPerfil;
-    }
-
     @ManyToMany
     @JoinTable(
             name = "usuarios_publicacoes_salvas",
@@ -50,13 +34,9 @@ public class Usuario {
     )
     private List<Publicacao> publicacoesSalvas = new ArrayList<>();
 
-    public List<Publicacao> getPublicacoesSalvas() {
-        return publicacoesSalvas;
-    }
-
-    public void setPublicacoesSalvas(List<Publicacao> publicacoesSalvas) {
-        this.publicacoesSalvas = publicacoesSalvas;
-    }
+    // inverso opcional de curtidas (não obrigatório, mas útil)
+    @ManyToMany(mappedBy = "curtidas")
+    private Set<Publicacao> curtidas = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
@@ -69,22 +49,6 @@ public class Usuario {
     @ManyToMany(mappedBy = "seguidores")
     private Set<Usuario> seguindo = new HashSet<>();
 
-    public Set<Usuario> getSeguidores() {
-        return seguidores;
-    }
-
-    public void setSeguidores(Set<Usuario> seguidores) {
-        this.seguidores = seguidores;
-    }
-
-    public Set<Usuario> getSeguindo() {
-        return seguindo;
-    }
-
-    public void setSeguindo(Set<Usuario> seguindo) {
-        this.seguindo = seguindo;
-    }
-
     public Usuario(){}
 
     public Usuario(String nome,String email, String senha){
@@ -92,6 +56,8 @@ public class Usuario {
         this.email = email;
         this.senha = senha;
     }
+
+    // getters / setters
 
     public Long getId() {
         return id;
@@ -131,5 +97,53 @@ public class Usuario {
 
     public void setPublicacoes(List<Publicacao> publicacoes) {
         this.publicacoes = publicacoes;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
+    }
+
+    public List<Publicacao> getPublicacoesSalvas() {
+        return publicacoesSalvas;
+    }
+
+    public void setPublicacoesSalvas(List<Publicacao> publicacoesSalvas) {
+        this.publicacoesSalvas = publicacoesSalvas;
+    }
+
+    public Set<Usuario> getSeguidores() {
+        return seguidores;
+    }
+
+    public void setSeguidores(Set<Usuario> seguidores) {
+        this.seguidores = seguidores;
+    }
+
+    public Set<Usuario> getSeguindo() {
+        return seguindo;
+    }
+
+    public void setSeguindo(Set<Usuario> seguindo) {
+        this.seguindo = seguindo;
+    }
+
+    public Set<Publicacao> getCurtidas() {
+        return curtidas;
+    }
+
+    public void setCurtidas(Set<Publicacao> curtidas) {
+        this.curtidas = curtidas;
     }
 }

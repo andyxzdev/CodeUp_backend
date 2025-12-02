@@ -2,8 +2,7 @@ package com.codeUp.demo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "publicacoes")
@@ -24,15 +23,42 @@ public class Publicacao {
     private int salvosCount = 0;
 
     @Column(nullable = true)
-    private String imageUrl; // 🔥 NOVO: URL da imagem salva
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private Usuario author;
 
+    // =============================
+    // 🔥 CURTIDAS (faltava isso!)
+    // =============================
+    @ManyToMany
+    @JoinTable(
+            name = "publicacao_curtidas",
+            joinColumns = @JoinColumn(name = "publicacao_id"),
+            inverseJoinColumns = @JoinColumn(name = "usuario_id")
+    )
+    private Set<Usuario> curtidas = new HashSet<>();
+
+    public Set<Usuario> getCurtidas() {
+        return curtidas;
+    }
+
+    public void adicionarCurtida(Usuario usuario) {
+        this.curtidas.add(usuario);
+    }
+
+    public void removerCurtidaPorUsuarioId(Long usuarioId) {
+        this.curtidas.removeIf(u -> u.getId().equals(usuarioId));
+    }
+
+    // =============================
+    // COMENTÁRIOS
+    // =============================
     @OneToMany(mappedBy = "publicacao", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarios = new ArrayList<>();
 
+    // construtores
     public Publicacao() {}
 
     public Publicacao(String conteudo, Usuario author) {
@@ -41,8 +67,7 @@ public class Publicacao {
         this.createdAt = LocalDateTime.now();
     }
 
-    // GETTERS & SETTERS
-
+    // GETTERS E SETTERS
     public Long getId() { return id; }
 
     public void setId(Long id) { this.id = id; }

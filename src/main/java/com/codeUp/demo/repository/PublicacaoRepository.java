@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface PublicacaoRepository extends JpaRepository<Publicacao, Long>{
+public interface PublicacaoRepository extends JpaRepository<Publicacao, Long> {
     List<Publicacao> findAllByOrderByCreatedAtDesc();
     List<Publicacao> findByAuthorIdOrderByCreatedAtDesc(Long authorId);
     Page<Publicacao> findAllByOrderByCreatedAtDesc(Pageable pageable);
