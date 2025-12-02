@@ -7,6 +7,7 @@ import com.codeUp.demo.repository.PublicacaoRepository;
 import com.codeUp.demo.repository.UsuarioRepository;
 import com.codeUp.demo.repository.ComentarioRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -57,20 +58,29 @@ public class PublicacaoService {
     }
 
     // ====================================================================
-    // UPLOAD DE IMAGEM
-    // ====================================================================
-    public String uploadImagem(MultipartFile imagem, String ipLocal) {
+// UPLOAD DE IMAGEM (CORRIGIDO, FUNCIONA EM NGROK E LOCAL)
+// ====================================================================
+    public String uploadImagem(MultipartFile imagem, HttpServletRequest request) {
         try {
+            // Nome único
             String nomeArquivo = UUID.randomUUID() + "-" + imagem.getOriginalFilename();
 
+            // Pasta onde vai salvar
             String pasta = "C:/Users/Andy/Documents/0 - WEB DEV PROJECTS/uploads/";
             File dir = new File(pasta);
             if (!dir.exists()) dir.mkdirs();
 
+            // Salvar arquivo no disco
             File destino = new File(dir, nomeArquivo);
             imagem.transferTo(destino);
 
-            return "http://" + ipLocal + ":8080/uploads/" + nomeArquivo;
+            // Montar URL base (funciona com NGROK)
+            String baseUrl = request.getRequestURL()
+                    .toString()
+                    .replace(request.getRequestURI(), "");
+
+            // URL pública final
+            return baseUrl + "/uploads/" + nomeArquivo;
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage());

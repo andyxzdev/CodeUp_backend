@@ -59,7 +59,8 @@ public class SecurityConfig {
                 "Origin",
                 "Content-Type",
                 "Accept",
-                "Authorization"
+                "Authorization",
+                "ngrok-skip-browser-warning"
         ));
 
         config.setExposedHeaders(Arrays.asList(

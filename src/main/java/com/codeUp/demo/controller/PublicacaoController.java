@@ -39,10 +39,9 @@ public class PublicacaoController {
         this.publicacaoService = publicacaoService;
         this.usuarioService = usuarioService;
     }
-
     // --------------------------------------------------------------------
-    // CRIAR PUBLICAÇÃO (TEXTO + IMAGEM)
-    // --------------------------------------------------------------------
+// CRIAR PUBLICAÇÃO (TEXTO + IMAGEM)
+// --------------------------------------------------------------------
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<?> criarPublicacao(
             HttpServletRequest request,
@@ -64,7 +63,7 @@ public class PublicacaoController {
 
         // PROCESSAR IMAGEM
         if (imagem != null && !imagem.isEmpty()) {
-            String imageUrl = publicacaoService.uploadImagem(imagem, serverAddress);
+            String imageUrl = publicacaoService.uploadImagem(imagem, request);
             pub.setImageUrl(imageUrl);
         }
 
